@@ -1,0 +1,113 @@
+[1]
+load:      ファイルの読み込み
+show-strg: 使用メモリーの表示
+quit     : 終了処理の変更
+
+これに応じて以下のような改変を施す。
+  lisp_mt.c: main()の中で while(1)内を関数にする。 int io_flow()
+
+  in_word2で文字 EOF を読んだら wrd_find_EOF (←新たに定義) を
+  返すようにする。
+
+  out.c: 関数 static int atm_ncpy_iter(L_obj x, char *p, int len)
+              int atm_ncpy(L_obj x, char str[], int len)
+         を追加。
+         atom の文字列を C program の配列にコピーする。
+         具体的には、リスプ式 load 'file-name で指定されたfile-name
+         のファイルを開くために file-nameを Cの文字列に直す必要が
+         あり、このために使う。
+
+その他
+show-strg: 使用メモリーの表示
+  func.c: 関数 static L_obj num2Lobj(long num)
+               L_obj mk_numb_from_long(long num)
+          を追加。
+          C program 中のlong型整数を lispの数に変換
+
+quit     : 終了処理の変更
+
+
+[2]
+out_tree:
+lisp-S式は非常にその内容を読み取りづらいのでlisp-S式だけでなく、その構
+造木を出力するようにする。
+定数 TREE_EXP を定義して lisp_mt.c をコンパイルすると有効になる。
+
+show-tree:
+debug と同様だが、out の代わりに out_tree を使って、S-式の代わりに、
+構造木を書き出す。
+
+[3]
+show-atom:
+lisp-式の debug を目的として
+指定したアトム L_obj (i.e. lisp object node) に対し
+    ( (node番号=配列添字 z,アトムの束縛値リスト Vlst[z])
+      そのアトムの Obj_lst への登録順の番号,
+      登録されているアトムの総数 )
+を返す。
+
+show-all-atoms:
+登録されているアトムのリスト Obj_lst を返す。
+
+
+[4] (06/06/??)
+ /:
+remainder:
+
+基本手続きとして整数商 /と余り remainderを追加する。これに伴い、 0での
+割算に対するエラー出力としてwrd_division_with_zero を追加。
+
+func.c内の
+        積の実装 multiplication
+        差の実装 subtraction
+
+を少し変更。
+
+[5] (06/06/18)
+リスプ式のコメント内の語もアトムとして扱い、無駄な登録を行っているのを
+回避する。
+
+in_word2 で語をアトムに変換するのは(left, right_bracketを除いて)止め、
+元々の in_word を in_word3 とし、新たな in_word では in_word3 を呼び出
+して、そこでアトムに変換して返すようにする。
+
+この結果、コメントの例外的な扱いが、in_word2 と in_word3に分散するとい
+う弊害も生じている。
+
+[案]
+in_word2 が保持する語のリスト bufferに関して、buffer内のコメントの印と
+する語 (今の場合"["と "]")を、コメント用の登録済のアトムで置き換える関
+数を作り、buffer が完成した時点で作用させる。こうすれば、コメントの印
+とする語をパラメータとする事も出来る。
+-----------------------------------------------------------
+
+[For Android]
+キーワードの簡略形(alias)
+lambda -> lmd
+define -> def
+show-strg -> strg
+show-tree -> st
+show-atom -> sa
+show-all-atoms -> saa
+remainder -> rem
+load -> ld
+quit -> q
+
+
+mk_alias
+の追加
+これに伴い、Obj_lst に登録する内容を変更
+
+clean_env()
+restore_env()
+にも影響あり。
+最初、このことに気づかず、登録したアトムをObj_lstの各ノードn に
+対し、Car[n]で取得できるとしていたためclean_env()の効果がなかった。
+aliasも考えて get_atm2_obj_lst(n)で置き換えたが、まだbugが入り込ん
+でいるかもしれない。
+
+aliasは読み取りの際に対象とするatomに置き換えられているため
+get_atm_obj_lst(n) でも良いだろう。
+
+
+

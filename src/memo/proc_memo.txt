@@ -1,0 +1,30 @@
+基本関数の引数が(最大 )3個
+    #define PROCTYPE(proc) L_obj (proc)(L_obj, L_obj, L_obj)
+に制限されている点について
+
+eval.c の中で
+    x = Car[args]; /* pick up first argument */
+    y = Car[Cdr[args]]; /* pick up second argument */
+    z = Car[Cdr[Cdr[args]]]; /* pick up third argument */
+
+    /* fが組み込み関数の場合 */
+    if( is_regfunc(f) ){
+        if (f == wrd_quit){ 
+            proc_call(f, x, y, z); 
+
+となっているので
+proc_call に fと 上のargsを渡すようにすれば、
+(引数の数は fから、Pf_args[f]-1で得られるので)
+
+例えば、
+PROC(p_car, x, y, z){
+    return Car[x];
+}
+の代わりに
+PROC(p_car, args){
+    L_obj x=Car[args];
+    return Car[x];
+}
+のように、(必要ならば)関数定義の中でx,y,zを作ることにすれば
+ 3個の制限など必要なくなる。
+

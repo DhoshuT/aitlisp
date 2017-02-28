@@ -1,0 +1,72 @@
+﻿[ 構造木を書き出す ]
+
+('lambda (x) + * 3 x 1 2)
+
+S-式:  ((' (lambda (x) (+ (* 3 x) 1))) 2)
+
+ .--.-- '
+ |  |
+ |  .--.-- lambda
+ |     |
+ |     .--.-- x
+ |     |  
+ |     .-- .-- +
+ |         |
+ |         .--.-- *
+ |         |  |
+ |         |  .-- 3
+ |         |  |
+ |         |  .-- x
+ |         |
+ |         .-- 1
+ |  
+ .-- 2
+
+[ アルゴリズム ]
+
+character[] edge_line
+
+function tree (x):
+----------------------------------------
+
+if is_atom x then 
+     print " " + label of x
+else 
+     print ".--"
+
+     if not is_atom (car x) then
+          if cdr x not NIL then
+              add "|  " to edge_line
+          else
+              add "   " to edge_line
+          end if              
+     end if
+
+     tree (car x)
+
+     if not is_atom (car x) then
+          edge-line から 3文字分取り去る。
+     end if
+end if
+
+if (cdr x) not NIL then
+     print edge_line + "|" + 改行 
+     print edge_line
+
+     tree (cdr x)
+end if
+-----------------------------------------
+
+
+ (* 3 (+ 7 3))
+
+.-- *
+|
+.-- 3              (3 (+ 7 3))
+|                  ((+ 7 3))       |\\
+.--.-- +                  (+ 7 3)
+   |
+   .-- 7
+   |
+   .-- 3
+
